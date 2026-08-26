@@ -1,0 +1,4543 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1,
+maximum-scale=1,
+user-scalable=no,
+viewport-fit=cover">
+
+<title>Caixote Motorizadas</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#ffd21c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,
+body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#08111d;
+    font-family:Arial,sans-serif;
+    touch-action:none;
+}
+
+body{
+    position:fixed;
+    inset:0;
+}
+
+#game{
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+}
+
+canvas{
+    display:block;
+    width:100%;
+    height:100%;
+}
+
+/* =========================
+   TELAS
+========================= */
+
+.screen{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    text-align:center;
+    color:white;
+
+    background:
+    linear-gradient(
+        rgba(3,8,18,.60),
+        rgba(3,8,18,.94)
+    );
+}
+
+.screen.active{
+    display:flex;
+}
+
+.logo{
+    font-size:34px;
+    font-weight:900;
+    color:#ffd21c;
+    text-shadow:
+        0 4px 15px #000,
+        0 0 20px rgba(255,210,28,.25);
+    margin-bottom:7px;
+}
+
+.subtitle{
+    color:#eee;
+    font-size:14px;
+    margin-bottom:18px;
+}
+
+.menuBox{
+    width:min(92%,430px);
+    padding:20px;
+    border-radius:20px;
+
+    background:
+    linear-gradient(
+        145deg,
+        rgba(13,28,48,.98),
+        rgba(7,17,31,.98)
+    );
+
+    border:2px solid rgba(255,210,28,.55);
+
+    box-shadow:
+        0 15px 60px #000;
+}
+
+button{
+    border:0;
+    border-radius:13px;
+    font-weight:bold;
+    font-size:16px;
+    padding:15px;
+    cursor:pointer;
+    touch-action:manipulation;
+}
+
+.mainBtn{
+    width:100%;
+    background:#ffd21c;
+    color:#07111f;
+    margin-top:8px;
+}
+
+.secondaryBtn{
+    width:100%;
+    background:#243449;
+    color:white;
+    margin-top:9px;
+}
+
+.mainBtn:active,
+.secondaryBtn:active,
+.levelBtn:active{
+    transform:scale(.97);
+}
+
+#levelList{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:9px;
+    max-height:55vh;
+    overflow-y:auto;
+}
+
+.levelBtn{
+    background:#1d3046;
+    color:white;
+    padding:13px 4px;
+    font-size:13px;
+}
+
+.levelBtn.unlocked{
+    background:#ffd21c;
+    color:#07111f;
+}
+
+.levelBtn.locked{
+    opacity:.42;
+}
+
+.small{
+    color:#aaa;
+    font-size:12px;
+    margin-top:12px;
+}
+
+/* =========================
+   LOADING
+========================= */
+
+#loading{
+    position:fixed;
+    inset:0;
+    z-index:300;
+
+    background:
+    radial-gradient(
+        circle at center,
+        #152b43,
+        #07111f 70%
+    );
+
+    color:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+}
+
+#loading h1{
+    color:#ffd21c;
+    font-size:34px;
+    margin-bottom:10px;
+}
+
+.loader{
+    width:180px;
+    height:6px;
+    margin-top:18px;
+    background:#26384c;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.loader div{
+    width:45%;
+    height:100%;
+    background:#ffd21c;
+    animation:load 1s infinite;
+}
+
+@keyframes load{
+    0%{
+        transform:translateX(-100%);
+    }
+    100%{
+        transform:translateX(450%);
+    }
+}
+
+/* =========================
+   HUD
+========================= */
+
+#hud{
+    position:fixed;
+    z-index:30;
+    top:0;
+    left:0;
+    right:0;
+    display:none;
+    pointer-events:none;
+}
+
+.hudTop{
+    display:flex;
+    justify-content:space-between;
+    padding:
+        max(8px,env(safe-area-inset-top))
+        8px
+        6px;
+}
+
+.hudBox{
+    background:rgba(0,0,0,.64);
+    color:white;
+    border-radius:9px;
+    padding:7px 10px;
+    margin:2px;
+    font-size:13px;
+    backdrop-filter:blur(4px);
+}
+
+#position{
+    color:#ffd21c;
+    font-weight:bold;
+}
+
+#speed{
+    color:#66ffd0;
+    font-weight:bold;
+}
+
+#nitroBar{
+    width:120px;
+    height:7px;
+    margin-top:5px;
+    background:#333;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+#nitroFill{
+    height:100%;
+    width:100%;
+    background:#ff5722;
+    transition:width:.08s linear;
+}
+
+#progressWrap{
+    width:62%;
+    height:8px;
+    margin:auto;
+    background:rgba(255,255,255,.22);
+    border-radius:10px;
+    overflow:hidden;
+}
+
+#progress{
+    height:100%;
+    width:0%;
+    background:#ffd21c;
+}
+
+/* =========================
+   CONTROLES
+========================= */
+
+#controls{
+    position:fixed;
+    z-index:40;
+    bottom:
+        max(13px,env(safe-area-inset-bottom));
+    left:0;
+    right:0;
+
+    display:none;
+
+    justify-content:space-between;
+    align-items:end;
+
+    padding:0 13px;
+
+    pointer-events:none;
+}
+
+.controlGroup{
+    display:flex;
+    gap:9px;
+    pointer-events:auto;
+}
+
+.control{
+    width:64px;
+    height:64px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:white;
+
+    background:
+    rgba(7,17,31,.78);
+
+    border:
+    2px solid
+    rgba(255,255,255,.4);
+
+    font-size:24px;
+    font-weight:bold;
+
+    user-select:none;
+    touch-action:none;
+
+    box-shadow:
+        0 5px 15px rgba(0,0,0,.4);
+}
+
+.control:active{
+    transform:scale(.92);
+    background:#ffd21c;
+    color:#07111f;
+}
+
+#gas{
+    width:82px;
+    height:82px;
+
+    background:
+    rgba(255,210,28,.9);
+
+    color:#07111f;
+}
+
+#nitro{
+    background:
+    rgba(255,75,25,.82);
+
+    font-size:12px;
+}
+
+#brake{
+    background:
+    rgba(120,20,20,.78);
+}
+
+/* =========================
+   CONTAGEM
+========================= */
+
+#countdown{
+    position:fixed;
+    z-index:80;
+    inset:0;
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    color:#ffd21c;
+    font-size:90px;
+    font-weight:900;
+
+    text-shadow:
+        0 7px 25px #000;
+}
+
+/* =========================
+   MENSAGEM
+========================= */
+
+#message{
+    position:fixed;
+    z-index:70;
+    top:38%;
+    left:0;
+    right:0;
+
+    text-align:center;
+
+    font-size:45px;
+    font-weight:900;
+
+    color:white;
+
+    text-shadow:
+        0 5px 20px #000;
+
+    display:none;
+}
+
+/* =========================
+   VELOCIDADE
+========================= */
+
+#speedEffect{
+    position:fixed;
+    inset:0;
+    z-index:15;
+    pointer-events:none;
+
+    opacity:0;
+
+    background:
+    radial-gradient(
+        ellipse at center,
+        transparent 35%,
+        rgba(255,255,255,.12)
+    );
+
+    transition:opacity:.15s;
+}
+
+#nitroEffect{
+    position:fixed;
+    inset:0;
+    z-index:16;
+    pointer-events:none;
+
+    opacity:0;
+
+    background:
+    radial-gradient(
+        ellipse at center,
+        transparent 25%,
+        rgba(255,120,30,.16)
+    );
+}
+
+/* =========================
+   RESULTADO
+========================= */
+
+.resultText{
+    line-height:1.8;
+    color:#ddd;
+    margin-bottom:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game"></div>
+
+<div id="speedEffect"></div>
+<div id="nitroEffect"></div>
+
+<!-- ======================
+     LOADING
+======================= -->
+
+<div id="loading">
+
+    <h1>🏍️ CAIXOTE</h1>
+
+    <p>A carregar o jogo...</p>
+
+    <div class="loader">
+        <div></div>
+    </div>
+
+</div>
+
+
+<!-- ======================
+     MENU
+======================= -->
+
+<div id="menu" class="screen">
+
+    <div class="logo">
+        🏍️ CAIXOTE MOTORIZADAS
+    </div>
+
+    <div class="subtitle">
+        Corrida • Velocidade • Ultrapassagens
+    </div>
+
+    <div class="menuBox">
+
+        <button
+            class="mainBtn"
+            id="playBtn">
+
+            🏁 COMEÇAR CORRIDA
+
+        </button>
+
+        <button
+            class="secondaryBtn"
+            id="levelsBtn">
+
+            🗺️ ESCOLHER NÍVEL
+
+        </button>
+
+        <div class="small">
+            10 estradas • adversários • obstáculos • nitro
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================
+     NÍVEIS
+======================= -->
+
+<div id="levels" class="screen">
+
+    <div class="logo">
+        🗺️ ESCOLHER NÍVEL
+    </div>
+
+    <div class="menuBox">
+
+        <div id="levelList"></div>
+
+        <button
+            class="secondaryBtn"
+            id="backBtn">
+
+            VOLTAR
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ======================
+     HUD
+======================= -->
+
+<div id="hud">
+
+    <div class="hudTop">
+
+        <div>
+
+            <div class="hudBox">
+                🏁 Nível
+                <span id="hudLevel">1</span>
+            </div>
+
+            <div class="hudBox">
+                🥇
+                <span id="position">1.º</span>
+            </div>
+
+        </div>
+
+        <div>
+
+            <div class="hudBox">
+                ⚡
+                <span id="speed">0</span>
+                km/h
+            </div>
+
+            <div class="hudBox">
+                ⏱️
+                <span id="timer">0.0</span>s
+            </div>
+
+            <div class="hudBox">
+
+                ⚡ Nitro
+
+                <div id="nitroBar">
+                    <div id="nitroFill"></div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="progressWrap">
+        <div id="progress"></div>
+    </div>
+
+</div>
+
+
+<!-- ======================
+     CONTROLES
+======================= -->
+
+<div id="controls">
+
+    <div class="controlGroup">
+
+        <div
+            class="control"
+            id="left">
+
+            ◀
+
+        </div>
+
+        <div
+            class="control"
+            id="right">
+
+            ▶
+
+        </div>
+
+    </div>
+
+
+    <div class="controlGroup">
+
+        <div
+            class="control"
+            id="nitro">
+
+            NITRO
+
+        </div>
+
+        <div
+            class="control"
+            id="brake">
+
+            🛑
+
+        </div>
+
+        <div
+            class="control"
+            id="gas">
+
+            ⛽
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div id="countdown"></div>
+
+<div id="message"></div>
+
+
+<!-- ======================
+     RESULTADO
+======================= -->
+
+<div id="result" class="screen">
+
+    <div
+        class="logo"
+        id="resultTitle">
+
+        🏆 VITÓRIA!
+
+    </div>
+
+    <div
+        class="resultText"
+        id="resultText">
+    </div>
+
+    <div class="menuBox">
+
+        <button
+            class="mainBtn"
+            id="nextBtn">
+
+            ➡️ PRÓXIMO NÍVEL
+
+        </button>
+
+        <button
+            class="secondaryBtn"
+            id="retryBtn">
+
+            🔄 JOGAR NOVAMENTE
+
+        </button>
+
+        <button
+            class="secondaryBtn"
+            id="resultMenuBtn">
+
+            🏠 MENU
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<script type="module">
+
+import * as THREE from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
+
+/* =====================================================
+   NÍVEIS
+===================================================== */
+
+const LEVELS=[
+
+{
+    name:"Estrada do Deserto",
+    type:"desert",
+    distance:5500,
+    base:92,
+    difficulty:1
+},
+
+{
+    name:"Estrada Rural",
+    type:"rural",
+    distance:5700,
+    base:98,
+    difficulty:2
+},
+
+{
+    name:"Estrada da Floresta",
+    type:"forest",
+    distance:5900,
+    base:104,
+    difficulty:3
+},
+
+{
+    name:"Estrada da Cidade",
+    type:"city",
+    distance:6100,
+    base:110,
+    difficulty:4
+},
+
+{
+    name:"Estrada da Praia",
+    type:"beach",
+    distance:6300,
+    base:116,
+    difficulty:5
+},
+
+{
+    name:"Estrada da Montanha",
+    type:"mountain",
+    distance:6500,
+    base:122,
+    difficulty:6
+},
+
+{
+    name:"Estrada da Chuva",
+    type:"rain",
+    distance:6700,
+    base:128,
+    difficulty:7
+},
+
+{
+    name:"Estrada Noturna",
+    type:"night",
+    distance:6900,
+    base:134,
+    difficulty:8
+},
+
+{
+    name:"Estrada do Rally",
+    type:"rally",
+    distance:7100,
+    base:140,
+    difficulty:9
+},
+
+{
+    name:"Grande Circuito",
+    type:"grand",
+    distance:7500,
+    base:146,
+    difficulty:10
+}
+
+];
+
+
+/* =====================================================
+   VARIÁVEIS
+===================================================== */
+
+let scene;
+let camera;
+let renderer;
+
+let player;
+
+let roadGroup;
+let sceneryGroup;
+let opponentGroup;
+let obstacleGroup;
+
+let opponents=[];
+let obstacles=[];
+
+let currentLevel=0;
+
+let unlocked=
+Number(
+localStorage.getItem("caixoteLevels") || 1
+);
+
+let playerZ=4;
+let playerX=0;
+
+let speed=0;
+
+let nitro=100;
+
+let raceTime=0;
+
+let raceRunning=false;
+
+let accelerating=false;
+let braking=false;
+let nitroPressed=false;
+
+let steering=0;
+
+let lastTime=0;
+
+let audioContext=null;
+
+let musicTimer=null;
+
+let engineOsc=null;
+let engineGain=null;
+
+
+/* =====================================================
+   ELEMENTOS
+===================================================== */
+
+const loading=
+document.getElementById("loading");
+
+const menu=
+document.getElementById("menu");
+
+const levelsScreen=
+document.getElementById("levels");
+
+const resultScreen=
+document.getElementById("result");
+
+const hud=
+document.getElementById("hud");
+
+const controls=
+document.getElementById("controls");
+
+const countdown=
+document.getElementById("countdown");
+
+const message=
+document.getElementById("message");
+
+const speedEffect=
+document.getElementById("speedEffect");
+
+const nitroEffect=
+document.getElementById("nitroEffect");
+
+
+/* =====================================================
+   INICIALIZAÇÃO
+===================================================== */
+
+function init(){
+
+    scene=
+    new THREE.Scene();
+
+
+    scene.background=
+    new THREE.Color(0x82c9ff);
+
+
+    scene.fog=
+    new THREE.Fog(
+        0x82c9ff,
+        65,
+        700
+    );
+
+
+    camera=
+    new THREE.PerspectiveCamera(
+        68,
+        innerWidth/innerHeight,
+        .1,
+        1200
+    );
+
+
+    renderer=
+    new THREE.WebGLRenderer({
+        antialias:false,
+        powerPreference:"high-performance"
+    });
+
+
+    renderer.setPixelRatio(
+        Math.min(
+            window.devicePixelRatio || 1,
+            1.25
+        )
+    );
+
+
+    renderer.setSize(
+        innerWidth,
+        innerHeight
+    );
+
+
+    renderer.outputColorSpace=
+    THREE.SRGBColorSpace;
+
+
+    document
+    .getElementById("game")
+    .appendChild(
+        renderer.domElement
+    );
+
+
+    /* luz principal */
+
+    const hemi=
+    new THREE.HemisphereLight(
+        0xffffff,
+        0x604020,
+        2.0
+    );
+
+    scene.add(hemi);
+
+
+    const sun=
+    new THREE.DirectionalLight(
+        0xffffff,
+        2.0
+    );
+
+    sun.position.set(
+        -100,
+        250,
+        100
+    );
+
+    scene.add(sun);
+
+
+    setupMenus();
+
+    setupControls();
+
+    buildLevels();
+
+
+    loading.style.display="none";
+
+    menu.classList.add("active");
+
+
+    window.addEventListener(
+        "resize",
+        resize
+    );
+
+
+    animate();
+
+}
+
+
+/* =====================================================
+   MENU
+===================================================== */
+
+function setupMenus(){
+
+    document
+    .getElementById("playBtn")
+    .onclick=()=>{
+
+        startLevel(
+            currentLevel
+        );
+
+    };
+
+
+    document
+    .getElementById("levelsBtn")
+    .onclick=()=>{
+
+        menu.classList.remove(
+            "active"
+        );
+
+        buildLevels();
+
+        levelsScreen.classList.add(
+            "active"
+        );
+
+    };
+
+
+    document
+    .getElementById("backBtn")
+    .onclick=()=>{
+
+        levelsScreen.classList.remove(
+            "active"
+        );
+
+        menu.classList.add(
+            "active"
+        );
+
+    };
+
+
+    document
+    .getElementById("retryBtn")
+    .onclick=()=>{
+
+        resultScreen.classList.remove(
+            "active"
+        );
+
+        startLevel(
+            currentLevel
+        );
+
+    };
+
+
+    document
+    .getElementById("nextBtn")
+    .onclick=()=>{
+
+        if(
+            currentLevel<
+            LEVELS.length-1
+        ){
+
+            currentLevel++;
+
+            resultScreen.classList.remove(
+                "active"
+            );
+
+            startLevel(
+                currentLevel
+            );
+
+        }
+
+    };
+
+
+    document
+    .getElementById("resultMenuBtn")
+    .onclick=()=>{
+
+        resultScreen.classList.remove(
+            "active"
+        );
+
+        menu.classList.add(
+            "active"
+        );
+
+    };
+
+}
+
+
+/* =====================================================
+   NÍVEIS
+===================================================== */
+
+function buildLevels(){
+
+    const list=
+    document.getElementById(
+        "levelList"
+    );
+
+
+    list.innerHTML="";
+
+
+    LEVELS.forEach(
+        (level,index)=>{
+
+            const b=
+            document.createElement(
+                "button"
+            );
+
+
+            const available=
+            index<unlocked;
+
+
+            b.className=
+            "levelBtn "+
+            (
+                available
+                ?"unlocked"
+                :"locked"
+            );
+
+
+            b.innerHTML=
+            `${index+1}. ${level.name}<br>
+             ${available?"🏍️":"🔒"}`;
+
+
+            b.onclick=()=>{
+
+                if(!available)
+                    return;
+
+
+                currentLevel=index;
+
+
+                levelsScreen.classList.remove(
+                    "active"
+                );
+
+
+                startLevel(index);
+
+            };
+
+
+            list.appendChild(b);
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   INICIAR
+===================================================== */
+
+function startLevel(index){
+
+    currentLevel=index;
+
+
+    menu.classList.remove(
+        "active"
+    );
+
+    levelsScreen.classList.remove(
+        "active"
+    );
+
+    resultScreen.classList.remove(
+        "active"
+    );
+
+
+    hud.style.display="block";
+
+    controls.style.display="flex";
+
+
+    stopMusic();
+
+    stopEngine();
+
+    initAudio();
+
+    startMusic(
+        currentLevel
+    );
+
+
+    clearWorld();
+
+
+    createWorld(
+        LEVELS[currentLevel]
+    );
+
+
+    resetRace();
+
+
+    startCountdown();
+
+}
+
+
+/* =====================================================
+   LIMPAR
+===================================================== */
+
+function clearWorld(){
+
+    if(roadGroup)
+        scene.remove(roadGroup);
+
+    if(sceneryGroup)
+        scene.remove(sceneryGroup);
+
+    if(opponentGroup)
+        scene.remove(opponentGroup);
+
+    if(obstacleGroup)
+        scene.remove(obstacleGroup);
+
+    if(player)
+        scene.remove(player);
+
+
+    roadGroup=
+    new THREE.Group();
+
+    sceneryGroup=
+    new THREE.Group();
+
+    opponentGroup=
+    new THREE.Group();
+
+    obstacleGroup=
+    new THREE.Group();
+
+
+    scene.add(roadGroup);
+
+    scene.add(sceneryGroup);
+
+    scene.add(opponentGroup);
+
+    scene.add(obstacleGroup);
+
+
+    opponents=[];
+
+    obstacles=[];
+
+}
+
+
+/* =====================================================
+   CRIAR MUNDO
+===================================================== */
+
+function createWorld(level){
+
+    createGround(level);
+
+    createRoad(level);
+
+    createScenery(level);
+
+    createFinishLine(level);
+
+    createPlayer();
+
+    createOpponents(level);
+
+    createObstacles(level);
+
+    updateEnvironment(level);
+
+}
+
+
+/* =====================================================
+   TERRENO
+===================================================== */
+
+function createGround(level){
+
+    let color=0x9b6a3e;
+
+
+    if(level.type==="desert")
+        color=0xd6a05a;
+
+    if(level.type==="rural")
+        color=0x5c8c43;
+
+    if(level.type==="forest")
+        color=0x315f35;
+
+    if(level.type==="city")
+        color=0x555b61;
+
+    if(level.type==="beach")
+        color=0xe5cf8a;
+
+    if(level.type==="mountain")
+        color=0x65706c;
+
+    if(level.type==="rain")
+        color=0x4c5653;
+
+    if(level.type==="night")
+        color=0x101b21;
+
+    if(level.type==="rally")
+        color=0x996b4a;
+
+
+    const ground=
+    new THREE.Mesh(
+        new THREE.PlaneGeometry(
+            100,
+            level.distance+500
+        ),
+        new THREE.MeshLambertMaterial({
+            color:color
+        })
+    );
+
+
+    ground.rotation.x=
+    -Math.PI/2;
+
+
+    ground.position.set(
+        0,
+        -.12,
+        level.distance/2
+    );
+
+
+    roadGroup.add(ground);
+
+}
+
+
+/* =====================================================
+   ESTRADA
+===================================================== */
+
+function createRoad(level){
+
+    const roadWidth=16;
+
+
+    const roadMaterial=
+    new THREE.MeshLambertMaterial({
+
+        color:
+        level.type==="rally"
+        ?0x624833
+        :0x303238
+
+    });
+
+
+    const road=
+    new THREE.Mesh(
+        new THREE.PlaneGeometry(
+            roadWidth,
+            level.distance
+        ),
+        roadMaterial
+    );
+
+
+    road.rotation.x=
+    -Math.PI/2;
+
+
+    road.position.z=
+    level.distance/2;
+
+
+    road.position.y=
+    -.05;
+
+
+    roadGroup.add(road);
+
+
+    /* faixas centrais */
+
+    const stripeMat=
+    new THREE.MeshBasicMaterial({
+        color:0xffffff
+    });
+
+
+    for(
+        let z=18;
+        z<level.distance;
+        z+=42
+    ){
+
+        const stripe=
+        new THREE.Mesh(
+            new THREE.PlaneGeometry(
+                .22,
+                13
+            ),
+            stripeMat
+        );
+
+
+        stripe.rotation.x=
+        -Math.PI/2;
+
+
+        stripe.position.set(
+            0,
+            .01,
+            z
+        );
+
+
+        roadGroup.add(stripe);
+
+    }
+
+
+    /* bordas */
+
+    const edgeMat=
+    new THREE.MeshBasicMaterial({
+        color:0xffd21c
+    });
+
+
+    for(
+        const x of [-8,8]
+    ){
+
+        const edge=
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                .22,
+                .07,
+                level.distance
+            ),
+            edgeMat
+        );
+
+
+        edge.position.set(
+            x,
+            .02,
+            level.distance/2
+        );
+
+
+        roadGroup.add(edge);
+
+    }
+
+
+    /* pequenas marcações laterais */
+
+    const whiteMat=
+    new THREE.MeshBasicMaterial({
+        color:0xffffff
+    });
+
+
+    for(
+        let z=30;
+        z<level.distance;
+        z+=80
+    ){
+
+        for(
+            const x of [-7.5,7.5]
+        ){
+
+            const marker=
+            new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    .18,
+                    .08,
+                    4
+                ),
+                whiteMat
+            );
+
+
+            marker.position.set(
+                x,
+                .03,
+                z
+            );
+
+
+            roadGroup.add(marker);
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   LINHAS
+===================================================== */
+
+function createFinishLine(level){
+
+    roadGroup.add(
+        createRaceLine(
+            0
+        )
+    );
+
+
+    roadGroup.add(
+        createRaceLine(
+            level.distance
+        )
+    );
+
+}
+
+
+function createRaceLine(z){
+
+    const group=
+    new THREE.Group();
+
+
+    for(
+        let x=-7.5;
+        x<8;
+        x+=2
+    ){
+
+        const square=
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                1.9,
+                .08,
+                1.4
+            ),
+            new THREE.MeshBasicMaterial({
+                color:
+                Math.floor(
+                    (x+7.5)/2
+                )%2===0
+                ?0x111111
+                :0xffffff
+            })
+        );
+
+
+        square.position.set(
+            x,
+            .06,
+            z
+        );
+
+
+        group.add(square);
+
+    }
+
+
+    return group;
+
+}
+
+
+/* =====================================================
+   CENÁRIO
+===================================================== */
+
+function createScenery(level){
+
+    for(
+        let z=25;
+        z<level.distance;
+        z+=55
+    ){
+
+        createSideObject(
+            level.type,
+            -1,
+            z
+        );
+
+
+        createSideObject(
+            level.type,
+            1,
+            z+25
+        );
+
+    }
+
+
+    /* montanhas especiais no deserto */
+
+    if(level.type==="desert"){
+
+        for(
+            let z=100;
+            z<level.distance;
+            z+=220
+        ){
+
+            createMountain(
+                -1,
+                z+80
+            );
+
+            createMountain(
+                1,
+                z+170
+            );
+
+        }
+
+    }
+
+}
+
+
+function createSideObject(
+    type,
+    side,
+    z
+){
+
+    let obj;
+
+
+    if(
+        type==="desert" ||
+        type==="rally"
+    ){
+
+        obj=
+        Math.random()>.55
+        ?createCactus()
+        :createRock();
+
+    }
+
+    else if(
+        type==="forest" ||
+        type==="rural"
+    ){
+
+        obj=createTree();
+
+    }
+
+    else if(type==="city"){
+
+        obj=createBuilding();
+
+    }
+
+    else if(type==="beach"){
+
+        obj=createPalm();
+
+    }
+
+    else if(type==="mountain"){
+
+        obj=createRock();
+
+    }
+
+    else{
+
+        obj=createTree();
+
+    }
+
+
+    obj.position.x=
+    side*
+    (
+        12+
+        Math.random()*18
+    );
+
+
+    obj.position.z=z;
+
+
+    const scale=
+    .75+
+    Math.random()*.65;
+
+
+    obj.scale.setScalar(
+        scale
+    );
+
+
+    sceneryGroup.add(obj);
+
+}
+
+
+/* =====================================================
+   ÁRVORE
+===================================================== */
+
+function createTree(){
+
+    const g=
+    new THREE.Group();
+
+
+    const trunk=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .35,
+            .5,
+            3,
+            7
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x704321
+        })
+    );
+
+
+    trunk.position.y=1.5;
+
+    g.add(trunk);
+
+
+    const crown=
+    new THREE.Mesh(
+        new THREE.ConeGeometry(
+            2.3,
+            5.3,
+            8
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x16752d
+        })
+    );
+
+
+    crown.position.y=5;
+
+    g.add(crown);
+
+
+    return g;
+
+}
+
+
+/* =====================================================
+   CACTO
+===================================================== */
+
+function createCactus(){
+
+    const g=
+    new THREE.Group();
+
+
+    const mat=
+    new THREE.MeshLambertMaterial({
+        color:0x2d8a45
+    });
+
+
+    const body=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .43,
+            .58,
+            3.2,
+            8
+        ),
+        mat
+    );
+
+
+    body.position.y=1.6;
+
+    g.add(body);
+
+
+    /* braço */
+
+    if(Math.random()>.35){
+
+        const arm=
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                .22,
+                .27,
+                1.3,
+                7
+            ),
+            mat
+        );
+
+
+        arm.position.set(
+            .7,
+            1.7,
+            0
+        );
+
+
+        arm.rotation.z=
+        -Math.PI/2.5;
+
+
+        g.add(arm);
+
+    }
+
+
+    return g;
+
+}
+
+
+/* =====================================================
+   PALMEIRA
+===================================================== */
+
+function createPalm(){
+
+    const g=
+    new THREE.Group();
+
+
+    const trunk=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .25,
+            .4,
+            5,
+            7
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x87582f
+        })
+    );
+
+
+    trunk.position.y=2.5;
+
+    g.add(trunk);
+
+
+    for(
+        let i=0;
+        i<7;
+        i++
+    ){
+
+        const leaf=
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                .18,
+                .12,
+                3.5
+            ),
+            new THREE.MeshLambertMaterial({
+                color:0x12863a
+            })
+        );
+
+
+        leaf.position.y=5;
+
+
+        leaf.rotation.y=
+        i*Math.PI/3.5;
+
+
+        leaf.rotation.x=-.35;
+
+
+        g.add(leaf);
+
+    }
+
+
+    return g;
+
+}
+
+
+/* =====================================================
+   ROCHA
+===================================================== */
+
+function createRock(){
+
+    const rock=
+    new THREE.Mesh(
+        new THREE.DodecahedronGeometry(
+            1.5+
+            Math.random()*2
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x686868
+        })
+    );
+
+
+    rock.position.y=1;
+
+    return rock;
+
+}
+
+
+/* =====================================================
+   MONTANHA
+===================================================== */
+
+function createMountain(
+    side,
+    z
+){
+
+    const mountain=
+    new THREE.Mesh(
+        new THREE.ConeGeometry(
+            20+
+            Math.random()*10,
+            28+
+            Math.random()*18,
+            6
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x8d674e
+        })
+    );
+
+
+    mountain.position.set(
+        side*
+        (
+            35+
+            Math.random()*15
+        ),
+        12,
+        z
+    );
+
+
+    sceneryGroup.add(
+        mountain
+    );
+
+}
+
+
+/* =====================================================
+   PRÉDIOS
+===================================================== */
+
+function createBuilding(){
+
+    const h=
+    5+
+    Math.random()*13;
+
+
+    const b=
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            5,
+            h,
+            5
+        ),
+        new THREE.MeshLambertMaterial({
+            color:
+            new THREE.Color().setHSL(
+                Math.random(),
+                .3,
+                .4
+            )
+        })
+    );
+
+
+    b.position.y=
+    h/2;
+
+
+    return b;
+
+}
+
+
+/* =====================================================
+   MOTORIZADA
+===================================================== */
+
+function createBike(
+    color
+){
+
+    const bike=
+    new THREE.Group();
+
+
+    bike.userData.wheels=[];
+
+
+    /* rodas */
+
+    const wheelMat=
+    new THREE.MeshLambertMaterial({
+        color:0x111111
+    });
+
+
+    const wheelGeo=
+    new THREE.CylinderGeometry(
+        .48,
+        .48,
+        .30,
+        14
+    );
+
+
+    const front=
+    new THREE.Mesh(
+        wheelGeo,
+        wheelMat
+    );
+
+
+    front.rotation.z=
+    Math.PI/2;
+
+
+    front.position.set(
+        0,
+        .50,
+        1.12
+    );
+
+
+    bike.add(front);
+
+    bike.userData.wheels.push(
+        front
+    );
+
+
+    const rear=
+    front.clone();
+
+
+    rear.position.z=
+    -1.05;
+
+
+    bike.add(rear);
+
+    bike.userData.wheels.push(
+        rear
+    );
+
+
+    /* pneus interiores */
+
+    const hubMat=
+    new THREE.MeshLambertMaterial({
+        color:0x777777
+    });
+
+
+    const hubGeo=
+    new THREE.CylinderGeometry(
+        .14,
+        .14,
+        .33,
+        10
+    );
+
+
+    const hubFront=
+    new THREE.Mesh(
+        hubGeo,
+        hubMat
+    );
+
+
+    hubFront.rotation.z=
+    Math.PI/2;
+
+
+    hubFront.position.copy(
+        front.position
+    );
+
+
+    bike.add(hubFront);
+
+
+    const hubRear=
+    hubFront.clone();
+
+
+    hubRear.position.z=
+    rear.position.z;
+
+
+    bike.add(hubRear);
+
+
+    /* corpo principal */
+
+    const body=
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            .75,
+            .40,
+            1.85
+        ),
+        new THREE.MeshLambertMaterial({
+            color:color
+        })
+    );
+
+
+    body.position.y=.95;
+
+
+    bike.add(body);
+
+
+    /* depósito */
+
+    const tank=
+    new THREE.Mesh(
+        new THREE.SphereGeometry(
+            .48,
+            12,
+            8
+        ),
+        new THREE.MeshLambertMaterial({
+            color:color
+        })
+    );
+
+
+    tank.scale.z=1.25;
+
+
+    tank.position.set(
+        0,
+        1.22,
+        .10
+    );
+
+
+    bike.add(tank);
+
+
+    /* banco */
+
+    const seat=
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            .55,
+            .18,
+            .75
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x151515
+        })
+    );
+
+
+    seat.position.set(
+        0,
+        1.30,
+        -.65
+    );
+
+
+    bike.add(seat);
+
+
+    /* guidão */
+
+    const handle=
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            1.05,
+            .10,
+            .10
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x151515
+        })
+    );
+
+
+    handle.position.set(
+        0,
+        1.72,
+        .90
+    );
+
+
+    bike.add(handle);
+
+
+    /* garfo */
+
+    const fork=
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            .12,
+            .85,
+            .12
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0xaaaaaa
+        })
+    );
+
+
+    fork.position.set(
+        0,
+        1.05,
+        .95
+    );
+
+
+    fork.rotation.x=-.25;
+
+
+    bike.add(fork);
+
+
+    /* piloto */
+
+    const pilot=
+    new THREE.Mesh(
+        new THREE.CapsuleGeometry(
+            .34,
+            .72,
+            5,
+            8
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x202a35
+        })
+    );
+
+
+    pilot.position.set(
+        0,
+        1.72,
+        -.32
+    );
+
+
+    pilot.rotation.x=
+    -.38;
+
+
+    bike.add(pilot);
+
+
+    /* braços */
+
+    const armMat=
+    new THREE.MeshLambertMaterial({
+        color:0x202a35
+    });
+
+
+    const arm1=
+    new THREE.Mesh(
+        new THREE.CapsuleGeometry(
+            .10,
+            .48,
+            4,
+            6
+        ),
+        armMat
+    );
+
+
+    arm1.position.set(
+        -.28,
+        1.65,
+        .43
+    );
+
+
+    arm1.rotation.x=
+    -1.05;
+
+
+    arm1.rotation.z=
+    -.20;
+
+
+    bike.add(arm1);
+
+
+    const arm2=
+    arm1.clone();
+
+
+    arm2.position.x=.28;
+
+    arm2.rotation.z=.20;
+
+    bike.add(arm2);
+
+
+    /* cabeça */
+
+    const head=
+    new THREE.Mesh(
+        new THREE.SphereGeometry(
+            .31,
+            12,
+            10
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0xffc49b
+        })
+    );
+
+
+    head.position.set(
+        0,
+        2.37,
+        .02
+    );
+
+
+    bike.add(head);
+
+
+    /* capacete */
+
+    const helmet=
+    new THREE.Mesh(
+        new THREE.SphereGeometry(
+            .37,
+            12,
+            10
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x101820
+        })
+    );
+
+
+    helmet.scale.y=.78;
+
+
+    helmet.position.set(
+        0,
+        2.53,
+        .02
+    );
+
+
+    bike.add(helmet);
+
+
+    /* farol */
+
+    const lamp=
+    new THREE.Mesh(
+        new THREE.SphereGeometry(
+            .15,
+            8,
+            8
+        ),
+        new THREE.MeshBasicMaterial({
+            color:0xffffcc
+        })
+    );
+
+
+    lamp.position.set(
+        0,
+        1.28,
+        1.02
+    );
+
+
+    bike.add(lamp);
+
+
+    /* escape */
+
+    const exhaust=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .10,
+            .13,
+            1.05,
+            8
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x555555
+        })
+    );
+
+
+    exhaust.rotation.x=
+    Math.PI/2;
+
+
+    exhaust.position.set(
+        .42,
+        .72,
+        -.80
+    );
+
+
+    bike.add(exhaust);
+
+
+    return bike;
+
+}
+
+
+/* =====================================================
+   PLAYER
+===================================================== */
+
+function createPlayer(){
+
+    player=
+    createBike(
+        0xff2020
+    );
+
+
+    player.position.set(
+        0,
+        0,
+        4
+    );
+
+
+    scene.add(
+        player
+    );
+
+}
+
+
+/* =====================================================
+   ADVERSÁRIOS
+===================================================== */
+
+function createOpponents(level){
+
+    const colors=[
+        0x1769ff,
+        0x00b85a,
+        0xff8c00,
+        0xa832ff,
+        0xffffff,
+        0x00d5d5,
+        0xffd21c
+    ];
+
+
+    for(
+        let i=0;
+        i<7;
+        i++
+    ){
+
+        const bike=
+        createBike(
+            colors[
+                i%colors.length
+            ]
+        );
+
+
+        const lane=
+        [-5,-2.5,2.5,5][
+            i%4
+        ];
+
+
+        bike.position.set(
+            lane,
+            0,
+            15+i*8
+        );
+
+
+        const variation=
+        Math.random()*.12-.06;
+
+
+        bike.userData={
+            baseSpeed:
+            level.base*
+            (1+variation),
+
+            lane:lane,
+
+            targetLane:lane,
+
+            changeTimer:
+            1+
+            Math.random()*3,
+
+            hitTimer:0
+        };
+
+
+        opponentGroup.add(
+            bike
+        );
+
+
+        opponents.push(
+            bike
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   OBSTÁCULOS
+===================================================== */
+
+function createObstacles(level){
+
+    const amount=
+    14+
+    level.difficulty*2;
+
+
+    for(
+        let i=0;
+        i<amount;
+        i++
+    ){
+
+        const z=
+        300+
+        i*
+        (
+            (level.distance-500)/
+            amount
+        );
+
+
+        const obstacle=
+        createObstacle(
+            level.type
+        );
+
+
+        obstacle.position.set(
+            randomLane(),
+            0,
+            z
+        );
+
+
+        obstacle.userData={
+            hitByPlayer:false,
+            hitByOpponents:[]
+        };
+
+
+        obstacleGroup.add(
+            obstacle
+        );
+
+
+        obstacles.push(
+            obstacle
+        );
+
+    }
+
+}
+
+
+function createObstacle(type){
+
+    let color=0xff8c00;
+
+
+    if(type==="mountain")
+        color=0x777777;
+
+    if(type==="city")
+        color=0xff3030;
+
+    if(type==="rain")
+        color=0x444444;
+
+    if(type==="night")
+        color=0x333333;
+
+
+    const obstacle=
+    new THREE.Group();
+
+
+    const base=
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            1.8,
+            1,
+            1.2
+        ),
+        new THREE.MeshLambertMaterial({
+            color:color
+        })
+    );
+
+
+    base.position.y=.5;
+
+
+    obstacle.add(base);
+
+
+    const stripe=
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            1.9,
+            .18,
+            1.3
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0xffffff
+        })
+    );
+
+
+    stripe.position.y=.8;
+
+
+    obstacle.add(stripe);
+
+
+    return obstacle;
+
+}
+
+
+function randomLane(){
+
+    const lanes=[
+        -5,
+        -2.5,
+        2.5,
+        5
+    ];
+
+
+    return lanes[
+        Math.floor(
+            Math.random()*
+            lanes.length
+        )
+    ];
+
+}
+
+
+/* =====================================================
+   AMBIENTE
+===================================================== */
+
+function updateEnvironment(level){
+
+    let sky=0x82c9ff;
+
+
+    if(level.type==="desert")
+        sky=0xe7a566;
+
+    if(level.type==="rural")
+        sky=0x7cc7ee;
+
+    if(level.type==="forest")
+        sky=0x6da7a0;
+
+    if(level.type==="city")
+        sky=0x769bb5;
+
+    if(level.type==="beach")
+        sky=0x64c7ed;
+
+    if(level.type==="mountain")
+        sky=0x778493;
+
+    if(level.type==="rain")
+        sky=0x59636d;
+
+    if(level.type==="night")
+        sky=0x07101e;
+
+    if(level.type==="rally")
+        sky=0xb87952;
+
+    if(level.type==="grand")
+        sky=0x69a7ce;
+
+
+    scene.background=
+    new THREE.Color(
+        sky
+    );
+
+
+    scene.fog.color=
+    new THREE.Color(
+        sky
+    );
+
+
+    scene.fog.near=65;
+
+
+    scene.fog.far=
+    level.type==="night"
+    ?430
+    :700;
+
+}
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+function resetRace(){
+
+    playerZ=4;
+
+    playerX=0;
+
+    speed=0;
+
+    nitro=100;
+
+    raceTime=0;
+
+    steering=0;
+
+    accelerating=false;
+
+    braking=false;
+
+    nitroPressed=false;
+
+
+    player.position.set(
+        0,
+        0,
+        4
+    );
+
+
+    player.rotation.set(
+        0,
+        0,
+        0
+    );
+
+
+    opponents.forEach(
+        (bike,i)=>{
+
+            bike.position.x=
+            [-5,-2.5,2.5,5][
+                i%4
+            ];
+
+            bike.position.z=
+            15+i*8;
+
+            bike.userData.hitTimer=0;
+
+        }
+    );
+
+
+    obstacles.forEach(
+        obstacle=>{
+
+            obstacle.userData.hitByPlayer=
+            false;
+
+            obstacle.userData.hitByOpponents=[];
+
+        }
+    );
+
+
+    updateHUD();
+
+}
+
+
+/* =====================================================
+   CONTAGEM
+===================================================== */
+
+async function startCountdown(){
+
+    countdown.style.display=
+    "flex";
+
+
+    raceRunning=false;
+
+
+    const values=[
+        "3",
+        "2",
+        "1",
+        "🏁 VAI!"
+    ];
+
+
+    for(
+        const value of values
+    ){
+
+        countdown.textContent=
+        value;
+
+
+        await wait(
+            700
+        );
+
+    }
+
+
+    countdown.style.display=
+    "none";
+
+
+    raceRunning=true;
+
+
+    lastTime=
+    performance.now();
+
+
+    engineSound();
+
+}
+
+
+function wait(ms){
+
+    return new Promise(
+        resolve=>
+        setTimeout(
+            resolve,
+            ms
+        )
+    );
+
+}
+
+
+/* =====================================================
+   PLAYER
+===================================================== */
+
+function updatePlayer(dt){
+
+    if(!raceRunning)
+        return;
+
+
+    const level=
+    LEVELS[currentLevel];
+
+
+    /* aceleração */
+
+    if(accelerating){
+
+        speed+=
+        72*dt;
+
+    }
+    else{
+
+        speed-=
+        20*dt;
+
+    }
+
+
+    /* travão */
+
+    if(braking){
+
+        speed-=
+        120*dt;
+
+    }
+
+
+    /* nitro */
+
+    if(
+        nitroPressed &&
+        nitro>0 &&
+        accelerating
+    ){
+
+        speed+=
+        145*dt;
+
+        nitro-=
+        30*dt;
+
+    }
+    else{
+
+        /*
+          Recuperação lenta do nitro.
+        */
+
+        nitro+=
+        3.5*dt;
+
+    }
+
+
+    nitro=
+    THREE.MathUtils.clamp(
+        nitro,
+        0,
+        100
+    );
+
+
+    const maxPlayer=
+    level.base+
+    30;
+
+
+    if(speed>maxPlayer)
+        speed=maxPlayer;
+
+
+    if(speed<0)
+        speed=0;
+
+
+    /* direção */
+
+    playerX+=
+    steering*
+    dt*
+    (
+        3+
+        speed/28
+    );
+
+
+    playerX=
+    THREE.MathUtils.clamp(
+        playerX,
+        -6.2,
+        6.2
+    );
+
+
+    playerZ+=
+    speed*
+    dt/
+    3.6;
+
+
+    player.position.x=
+    THREE.MathUtils.lerp(
+        player.position.x,
+        playerX,
+        .18
+    );
+
+
+    player.position.z=
+    playerZ;
+
+
+    /*
+      Inclinação da motorizada.
+    */
+
+    player.rotation.z=
+    THREE.MathUtils.lerp(
+        player.rotation.z,
+        -steering*.15,
+        .15
+    );
+
+
+    player.rotation.y=
+    THREE.MathUtils.lerp(
+        player.rotation.y,
+        steering*.08,
+        .15
+    );
+
+
+    /*
+      Suspensão.
+    */
+
+    player.position.y=
+    Math.sin(
+        performance.now()/75
+    )*
+    Math.min(
+        speed/900,
+        .025
+    );
+
+
+    /*
+      Rodas girando.
+    */
+
+    rotateWheels(
+        player,
+        speed*dt
+    );
+
+
+    /*
+      Efeito visual de velocidade.
+    */
+
+    const effect=
+    THREE.MathUtils.clamp(
+        speed/140,
+        0,
+        1
+    );
+
+
+    speedEffect.style.opacity=
+    String(
+        effect*.45
+    );
+
+
+    if(
+        nitroPressed &&
+        nitro>0 &&
+        accelerating
+    ){
+
+        nitroEffect.style.opacity=
+        ".75";
+
+    }
+    else{
+
+        nitroEffect.style.opacity=
+        "0";
+
+    }
+
+}
+
+
+/* =====================================================
+   RODAS
+===================================================== */
+
+function rotateWheels(
+    bike,
+    amount
+){
+
+    if(!bike.userData.wheels)
+        return;
+
+
+    bike.userData.wheels.forEach(
+        wheel=>{
+
+            wheel.rotation.x+=
+            amount*.9;
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   IA
+===================================================== */
+
+function updateOpponents(dt){
+
+    const level=
+    LEVELS[currentLevel];
+
+
+    opponents.forEach(
+        (bike,index)=>{
+
+            const data=
+            bike.userData;
+
+
+            if(data.hitTimer>0)
+                data.hitTimer-=dt;
+
+
+            let aiSpeed=
+            data.baseSpeed;
+
+
+            const distance=
+            playerZ-
+            bike.position.z;
+
+
+            if(
+                distance>0 &&
+                distance<120
+            ){
+
+                aiSpeed+=
+                7+
+                level.difficulty*.8;
+
+            }
+
+
+            if(
+                distance<
+                -180
+            ){
+
+                aiSpeed-=
+                8;
+
+            }
+
+
+            if(
+                distance>
+                150
+            ){
+
+                aiSpeed+=
+                10;
+
+            }
+
+
+            aiSpeed+=
+            Math.sin(
+                performance.now()/850+
+                index
+            )*2.5;
+
+
+            const minimum=
+            level.base-14;
+
+
+            const maximum=
+            level.base+22;
+
+
+            aiSpeed=
+            THREE.MathUtils.clamp(
+                aiSpeed,
+                minimum,
+                maximum
+            );
+
+
+            bike.position.z+=
+            aiSpeed*
+            dt/
+            3.6;
+
+
+            data.changeTimer-=dt;
+
+
+            if(
+                data.changeTimer<=0
+            ){
+
+                data.targetLane=
+                randomLane();
+
+
+                data.changeTimer=
+                1.7+
+                Math.random()*3;
+
+            }
+
+
+            const oldX=
+            bike.position.x;
+
+
+            bike.position.x=
+            THREE.MathUtils.lerp(
+                bike.position.x,
+                data.targetLane,
+                dt*.9
+            );
+
+
+            bike.position.x=
+            THREE.MathUtils.clamp(
+                bike.position.x,
+                -6.2,
+                6.2
+            );
+
+
+            bike.rotation.z=
+            THREE.MathUtils.lerp(
+                bike.rotation.z,
+                (
+                    oldX-
+                    bike.position.x
+                )*.10,
+                .2
+            );
+
+
+            rotateWheels(
+                bike,
+                aiSpeed*
+                dt
+            );
+
+
+            if(
+                bike.position.z<
+                playerZ-260
+            ){
+
+                bike.position.z=
+                playerZ+
+                60+
+                Math.random()*70;
+
+
+                bike.position.x=
+                randomLane();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   OBSTÁCULOS
+===================================================== */
+
+function updateObstacles(){
+
+    if(!raceRunning)
+        return;
+
+
+    obstacles.forEach(
+        obstacle=>{
+
+            const dx=
+            Math.abs(
+                obstacle.position.x-
+                player.position.x
+            );
+
+
+            const dz=
+            Math.abs(
+                obstacle.position.z-
+                player.position.z
+            );
+
+
+            if(
+                dx<1.25 &&
+                dz<1.8
+            ){
+
+                if(
+                    !obstacle.userData
+                    .hitByPlayer
+                ){
+
+                    obstacle.userData
+                    .hitByPlayer=true;
+
+
+                    speed*=.48;
+
+
+                    showMessage(
+                        "💥"
+                    );
+
+
+                    collisionSound();
+
+                }
+
+            }
+
+
+            opponents.forEach(
+                (bike,index)=>{
+
+                    const ax=
+                    Math.abs(
+                        obstacle.position.x-
+                        bike.position.x
+                    );
+
+
+                    const az=
+                    Math.abs(
+                        obstacle.position.z-
+                        bike.position.z
+                    );
+
+
+                    if(
+                        ax<1.2 &&
+                        az<1.8
+                    ){
+
+                        if(
+                            !obstacle.userData
+                            .hitByOpponents
+                            .includes(index)
+                        ){
+
+                            obstacle.userData
+                            .hitByOpponents
+                            .push(index);
+
+
+                            bike.userData
+                            .baseSpeed*=.70;
+
+
+                            setTimeout(
+                                ()=>{
+
+                                    if(
+                                        bike &&
+                                        bike.userData
+                                    ){
+
+                                        bike.userData
+                                        .baseSpeed=
+                                        Math.max(
+                                            bike.userData.baseSpeed,
+                                            LEVELS[
+                                                currentLevel
+                                            ].base*.92
+                                        );
+
+                                    }
+
+                                },
+                                900
+                            );
+
+                        }
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   CÂMERA
+===================================================== */
+
+function updateCamera(){
+
+    if(!player)
+        return;
+
+
+    /*
+      A câmera acompanha atrás.
+      Quando o jogador acelera,
+      fica ligeiramente mais distante.
+    */
+
+    const cameraDistance=
+    9+
+    speed*.018;
+
+
+    const desiredX=
+    player.position.x*.58;
+
+
+    const desiredY=
+    4.0+
+    speed*.008;
+
+
+    const desiredZ=
+    player.position.z-
+    cameraDistance;
+
+
+    camera.position.x=
+    THREE.MathUtils.lerp(
+        camera.position.x,
+        desiredX,
+        .11
+    );
+
+
+    camera.position.y=
+    THREE.MathUtils.lerp(
+        camera.position.y,
+        desiredY,
+        .10
+    );
+
+
+    camera.position.z=
+    THREE.MathUtils.lerp(
+        camera.position.z,
+        desiredZ,
+        .12
+    );
+
+
+    /*
+      Olha para a estrada à frente.
+    */
+
+    camera.lookAt(
+        player.position.x,
+        1.25,
+        player.position.z+
+        12+
+        speed*.04
+    );
+
+}
+
+
+/* =====================================================
+   POSIÇÃO
+===================================================== */
+
+function calculatePosition(){
+
+    let pos=1;
+
+
+    opponents.forEach(
+        bike=>{
+
+            if(
+                bike.position.z>
+                playerZ
+            ){
+
+                pos++;
+
+            }
+
+        }
+    );
+
+
+    return pos;
+
+}
+
+
+/* =====================================================
+   HUD
+===================================================== */
+
+function updateHUD(){
+
+    document
+    .getElementById(
+        "hudLevel"
+    )
+    .textContent=
+    currentLevel+1;
+
+
+    document
+    .getElementById(
+        "speed"
+    )
+    .textContent=
+    Math.round(speed);
+
+
+    document
+    .getElementById(
+        "position"
+    )
+    .textContent=
+    calculatePosition()+
+    ".º";
+
+
+    document
+    .getElementById(
+        "timer"
+    )
+    .textContent=
+    raceTime.toFixed(1);
+
+
+    document
+    .getElementById(
+        "nitroFill"
+    )
+    .style.width=
+    nitro+
+    "%";
+
+
+    const distance=
+    LEVELS[currentLevel]
+    .distance;
+
+
+    const percentage=
+    THREE.MathUtils.clamp(
+        playerZ/
+        distance*
+        100,
+        0,
+        100
+    );
+
+
+    document
+    .getElementById(
+        "progress"
+    )
+    .style.width=
+    percentage+
+    "%";
+
+}
+
+
+/* =====================================================
+   CHEGADA
+===================================================== */
+
+function checkFinish(){
+
+    const level=
+    LEVELS[currentLevel];
+
+
+    if(
+        playerZ>=
+        level.distance
+    ){
+
+        finishRace();
+
+    }
+
+}
+
+
+function finishRace(){
+
+    raceRunning=false;
+
+    stopMusic();
+
+    stopEngine();
+
+
+    const position=
+    calculatePosition();
+
+
+    showResult(
+        position
+    );
+
+}
+
+
+function showResult(
+    position
+){
+
+    hud.style.display=
+    "none";
+
+
+    controls.style.display=
+    "none";
+
+
+    resultScreen.classList.add(
+        "active"
+    );
+
+
+    const title=
+    document.getElementById(
+        "resultTitle"
+    );
+
+
+    const text=
+    document.getElementById(
+        "resultText"
+    );
+
+
+    const next=
+    document.getElementById(
+        "nextBtn"
+    );
+
+
+    if(position===1){
+
+        title.textContent=
+        "🏆 VITÓRIA!";
+
+
+        text.innerHTML=
+        `
+        Você chegou em <b>1.º lugar!</b><br>
+        Tempo: ${raceTime.toFixed(1)} segundos<br>
+        🏍️ Excelente corrida!
+        `;
+
+
+        if(
+            currentLevel+1>
+            unlocked
+        ){
+
+            unlocked=
+            currentLevel+1;
+
+
+            localStorage.setItem(
+                "caixoteLevels",
+                unlocked
+            );
+
+        }
+
+
+        if(
+            currentLevel<
+            LEVELS.length-1
+        ){
+
+            next.style.display=
+            "block";
+
+        }
+        else{
+
+            next.style.display=
+            "none";
+
+
+            title.textContent=
+            "👑 CAMPEÃO!";
+
+
+            text.innerHTML=
+            `
+            Você venceu o Grande Circuito!<br>
+            🏆 Os 10 níveis foram concluídos.
+            `;
+
+        }
+
+    }
+    else{
+
+        title.textContent=
+        "🏁 CORRIDA TERMINADA";
+
+
+        text.innerHTML=
+        `
+        Você terminou em
+        <b>${position}.º lugar</b>.<br>
+        Acelere mais e tente recuperar a posição!
+        `;
+
+
+        next.style.display=
+        "none";
+
+    }
+
+}
+
+
+/* =====================================================
+   MENSAGEM
+===================================================== */
+
+let messageTimer;
+
+
+function showMessage(
+    text
+){
+
+    message.textContent=
+    text;
+
+
+    message.style.display=
+    "block";
+
+
+    clearTimeout(
+        messageTimer
+    );
+
+
+    messageTimer=
+    setTimeout(
+        ()=>{
+
+            message.style.display=
+            "none";
+
+        },
+        650
+    );
+
+}
+
+
+/* =====================================================
+   CONTROLES
+===================================================== */
+
+function setupControls(){
+
+    setupControl(
+        "gas",
+
+        ()=>{
+            accelerating=true;
+            initAudio();
+            engineSound();
+        },
+
+        ()=>{
+            accelerating=false;
+        }
+    );
+
+
+    setupControl(
+        "brake",
+
+        ()=>{
+            braking=true;
+        },
+
+        ()=>{
+            braking=false;
+        }
+    );
+
+
+    setupControl(
+        "nitro",
+
+        ()=>{
+            nitroPressed=true;
+            initAudio();
+        },
+
+        ()=>{
+            nitroPressed=false;
+        }
+    );
+
+
+    setupControl(
+        "left",
+
+        ()=>{
+            steering=-1;
+        },
+
+        ()=>{
+            if(steering<0)
+                steering=0;
+        }
+    );
+
+
+    setupControl(
+        "right",
+
+        ()=>{
+            steering=1;
+        },
+
+        ()=>{
+            if(steering>0)
+                steering=0;
+        }
+    );
+
+}
+
+
+function setupControl(
+    id,
+    start,
+    end
+){
+
+    const element=
+    document.getElementById(id);
+
+
+    element.addEventListener(
+        "pointerdown",
+        event=>{
+
+            event.preventDefault();
+
+            try{
+                element.setPointerCapture(
+                    event.pointerId
+                );
+            }catch(e){}
+
+            start();
+
+        }
+    );
+
+
+    element.addEventListener(
+        "pointerup",
+        event=>{
+
+            event.preventDefault();
+
+            end();
+
+        }
+    );
+
+
+    element.addEventListener(
+        "pointercancel",
+        end
+    );
+
+}
+
+
+/* =====================================================
+   TECLADO
+===================================================== */
+
+window.addEventListener(
+    "keydown",
+    event=>{
+
+        if(event.key==="ArrowLeft")
+            steering=-1;
+
+
+        if(event.key==="ArrowRight")
+            steering=1;
+
+
+        if(
+            event.key==="ArrowUp" ||
+            event.key.toLowerCase()==="w"
+        )
+            accelerating=true;
+
+
+        if(
+            event.key==="ArrowDown" ||
+            event.key.toLowerCase()==="s"
+        )
+            braking=true;
+
+
+        if(
+            event.key===" " ||
+            event.key==="Shift"
+        ){
+
+            nitroPressed=true;
+
+            initAudio();
+
+        }
+
+    }
+);
+
+
+window.addEventListener(
+    "keyup",
+    event=>{
+
+        if(
+            event.key==="ArrowLeft" &&
+            steering<0
+        )
+            steering=0;
+
+
+        if(
+            event.key==="ArrowRight" &&
+            steering>0
+        )
+            steering=0;
+
+
+        if(
+            event.key==="ArrowUp" ||
+            event.key.toLowerCase()==="w"
+        )
+            accelerating=false;
+
+
+        if(
+            event.key==="ArrowDown" ||
+            event.key.toLowerCase()==="s"
+        )
+            braking=false;
+
+
+        if(
+            event.key===" " ||
+            event.key==="Shift"
+        )
+            nitroPressed=false;
+
+    }
+);
+
+
+/* =====================================================
+   ÁUDIO
+===================================================== */
+
+function initAudio(){
+
+    if(!audioContext){
+
+        audioContext=
+        new (
+            window.AudioContext ||
+            window.webkitAudioContext
+        )();
+
+    }
+
+
+    if(
+        audioContext.state===
+        "suspended"
+    ){
+
+        audioContext.resume();
+
+    }
+
+}
+
+
+/* =====================================================
+   MÚSICA
+===================================================== */
+
+function startMusic(
+    levelIndex
+){
+
+    initAudio();
+
+    stopMusic();
+
+
+    const scales=[
+
+        [220,247,277,330],
+
+        [196,220,247,294],
+
+        [196,233,262,311],
+
+        [220,247,294,330],
+
+        [262,294,330,392],
+
+        [175,196,220,262],
+
+        [185,220,246,277],
+
+        [147,175,196,220],
+
+        [165,196,233,277],
+
+        [196,233,277,330]
+
+    ];
+
+
+    const scale=
+    scales[levelIndex];
+
+
+    let step=0;
+
+
+    musicTimer=
+    setInterval(
+        ()=>{
+
+            if(!audioContext)
+                return;
+
+
+            if(!raceRunning)
+                return;
+
+
+            const frequency=
+            scale[
+                step%scale.length
+            ];
+
+
+            playTone(
+                frequency,
+                .11,
+                "triangle",
+                .035
+            );
+
+
+            if(
+                step%4===0
+            ){
+
+                playTone(
+                    frequency/2,
+                    .17,
+                    "sine",
+                    .022
+                );
+
+            }
+
+
+            step++;
+
+        },
+
+        Math.max(
+            150,
+            260-
+            levelIndex*7
+        )
+
+    );
+
+}
+
+
+function stopMusic(){
+
+    if(musicTimer){
+
+        clearInterval(
+            musicTimer
+        );
+
+        musicTimer=null;
+
+    }
+
+}
+
+
+/* =====================================================
+   TONS
+===================================================== */
+
+function playTone(
+    frequency,
+    duration,
+    type,
+    volume
+){
+
+    if(!audioContext)
+        return;
+
+
+    const oscillator=
+    audioContext.createOscillator();
+
+
+    const gain=
+    audioContext.createGain();
+
+
+    oscillator.type=
+    type;
+
+
+    oscillator.frequency.value=
+    frequency;
+
+
+    gain.gain.setValueAtTime(
+        volume,
+        audioContext.currentTime
+    );
+
+
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audioContext.currentTime+
+        duration
+    );
+
+
+    oscillator.connect(
+        gain
+    );
+
+
+    gain.connect(
+        audioContext.destination
+    );
+
+
+    oscillator.start();
+
+
+    oscillator.stop(
+        audioContext.currentTime+
+        duration
+    );
+
+}
+
+
+/* =====================================================
+   MOTOR
+===================================================== */
+
+function engineSound(){
+
+    if(!audioContext)
+        return;
+
+
+    if(engineOsc)
+        return;
+
+
+    engineOsc=
+    audioContext.createOscillator();
+
+
+    engineGain=
+    audioContext.createGain();
+
+
+    engineOsc.type=
+    "sawtooth";
+
+
+    engineOsc.frequency.value=
+    55;
+
+
+    engineGain.gain.value=
+    .012;
+
+
+    engineOsc.connect(
+        engineGain
+    );
+
+
+    engineGain.connect(
+        audioContext.destination
+    );
+
+
+    engineOsc.start();
+
+}
+
+
+function stopEngine(){
+
+    if(engineOsc){
+
+        try{
+
+            engineOsc.stop();
+
+        }catch(e){}
+
+
+        engineOsc.disconnect();
+
+        engineGain.disconnect();
+
+
+        engineOsc=null;
+
+        engineGain=null;
+
+    }
+
+}
+
+
+/* =====================================================
+   COLISÃO
+===================================================== */
+
+function collisionSound(){
+
+    if(!audioContext)
+        return;
+
+
+    playTone(
+        70,
+        .18,
+        "square",
+        .07
+    );
+
+
+    setTimeout(
+        ()=>{
+
+            playTone(
+                45,
+                .18,
+                "sawtooth",
+                .05
+            );
+
+        },
+        70
+    );
+
+}
+
+
+/* =====================================================
+   LOOP
+===================================================== */
+
+function animate(
+    time=0
+){
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    if(!lastTime)
+        lastTime=time;
+
+
+    const dt=
+    Math.min(
+        .05,
+        (time-lastTime)/1000
+    );
+
+
+    lastTime=time;
+
+
+    if(raceRunning){
+
+        raceTime+=dt;
+
+
+        updatePlayer(dt);
+
+        updateOpponents(dt);
+
+        updateObstacles();
+
+        updateHUD();
+
+        checkFinish();
+
+
+        if(engineOsc){
+
+            engineOsc.frequency.value=
+            45+
+            speed*.68;
+
+
+            engineGain.gain.value=
+            accelerating
+            ?0.018
+            :0.008;
+
+        }
+
+    }
+
+
+    updateCamera();
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+/* =====================================================
+   RESIZE
+===================================================== */
+
+function resize(){
+
+    camera.aspect=
+    innerWidth/
+    innerHeight;
+
+
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize(
+        innerWidth,
+        innerHeight
+    );
+
+}
+
+
+/* =====================================================
+   COMEÇAR
+===================================================== */
+
+init();
+
+</script>
+
+
+<!-- ======================
+     SERVICE WORKER
+======================= -->
+
+<script>
+
+if(
+    "serviceWorker" in navigator
+){
+
+    window.addEventListener(
+        "load",
+        ()=>{
+
+            navigator.serviceWorker
+            .register("./sw.js")
+            .then(
+                ()=>{
+                    console.log(
+                        "Caixote Motorizadas pronto para instalação!"
+                    );
+                }
+            )
+            .catch(
+                error=>{
+                    console.log(
+                        "Service Worker:",
+                        error
+                    );
+                }
+            );
+
+        }
+    );
+
+}
+
+</script>
+
+</body>
+</html>
