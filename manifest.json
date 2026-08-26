@@ -1,8 +1,8 @@
 {
   "name": "Caixote Motorizadas",
   "short_name": "Caixote Moto",
-  "description": "Jogo de corrida de motorizadas com vários níveis, adversários, obstáculos e nitro.",
-  "start_url": "./index.html",
+  "description": "Jogo de corrida de motorizadas com 10 níveis, adversários, obstáculos, nitro e diferentes ambientes.",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "landscape",
@@ -10,14 +10,16 @@
   "theme_color": "#ffd21c",
   "icons": [
     {
-      "src": "./ícon-192.png",
+      "src": "./ícone-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "./ícon-512.png",
+      "src": "./ícone-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
